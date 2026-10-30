@@ -362,7 +362,41 @@ function start(host) {
 function startDemo() {
   $("layout").classList.add("demo");
   $("demo-doc").hidden = false;
-  start(createDemoHost($("demo-content")));
+  var host = createDemoHost($("demo-content"));
+  start(host);
+
+  function open(file) {
+    $("status").textContent = file.name + " wordt geopend…";
+    host.openFile(file)
+      .then(function (name) {
+        $("demo-name").textContent = name;
+        state.stack = [];
+        state.expanded.clear();
+        state.savedPlace = null;
+        $("return").hidden = true;
+        $("search").value = "";
+        renderDetail();
+        return rescan(false);
+      })
+      .catch(function (e) { $("status").textContent = e.message; });
+  }
+
+  $("demo-open").addEventListener("click", function () { $("demo-file").click(); });
+  $("demo-file").addEventListener("change", function () {
+    if (this.files[0]) open(this.files[0]);
+    this.value = "";
+  });
+  var doc = $("demo-doc");
+  doc.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    doc.classList.add("dragging");
+  });
+  doc.addEventListener("dragleave", function () { doc.classList.remove("dragging"); });
+  doc.addEventListener("drop", function (e) {
+    e.preventDefault();
+    doc.classList.remove("dragging");
+    if (e.dataTransfer.files[0]) open(e.dataTransfer.files[0]);
+  });
 }
 
 if (typeof Office !== "undefined") {

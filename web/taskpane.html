@@ -13,7 +13,15 @@
 <body>
   <div id="layout">
     <section id="demo-doc" hidden>
-      <p class="demo-banner">Demo: klik in de tekst op een term met een hoofdletter.</p>
+      <div class="demo-bar">
+        <div class="demo-info">
+          <strong id="demo-name">Voorbeeldcontract</strong>
+          <span>Klik in de tekst op een gedefinieerde term. Open een eigen contract met de knop of sleep een .docx hierheen.</span>
+        </div>
+        <button id="demo-open" class="btn">Open Word-document</button>
+        <input id="demo-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      </div>
+      <p class="demo-privacy">Het document wordt alleen in deze browser gelezen. Er wordt niets verstuurd of opgeslagen.</p>
       <div id="demo-content"></div>
     </section>
 

@@ -1,6 +1,7 @@
 /*
  * Demo-modus: als de pagina buiten Word wordt geopend, toont de add-in een
  * voorbeeldcontract zodat je de werking in een gewone browser kunt bekijken.
+ * Je kunt ook een eigen .docx openen; dat wordt alleen in de browser gelezen.
  */
 (function () {
   "use strict";
@@ -41,22 +42,30 @@
     var listeners = [];
     var lastPlace = null;
 
-    BLOCKS.forEach(function (block) {
-      if (block.type === "table") {
-        var table = document.createElement("table");
-        block.rows.forEach(function (row) {
-          var tr = table.insertRow();
-          row.forEach(function (cell) { tr.insertCell().textContent = cell; });
-        });
-        container.appendChild(table);
-        tableEls.push(table);
-      } else {
-        var el = document.createElement(block.type === "h" ? "h2" : "p");
-        el.textContent = block.text;
-        container.appendChild(el);
-        paragraphEls.push(el);
-      }
-    });
+    function render(blocks) {
+      container.replaceChildren();
+      paragraphEls = [];
+      tableEls = [];
+      lastPlace = null;
+      blocks.forEach(function (block) {
+        if (block.type === "table") {
+          var table = document.createElement("table");
+          block.rows.forEach(function (row) {
+            var tr = table.insertRow();
+            row.forEach(function (cell) { tr.insertCell().textContent = cell; });
+          });
+          container.appendChild(table);
+          tableEls.push(table);
+        } else {
+          var el = document.createElement(block.type === "h" ? "h2" : "p");
+          el.textContent = block.text;
+          container.appendChild(el);
+          paragraphEls.push(el);
+        }
+      });
+    }
+
+    render(BLOCKS);
 
     container.addEventListener("mouseup", function (e) {
       var block = e.target.closest("p, h2, td");
@@ -100,8 +109,88 @@
         if (place) flash(place);
         return Promise.resolve();
       },
-      savePlace: function () { return Promise.resolve(lastPlace); }
+      savePlace: function () { return Promise.resolve(lastPlace); },
+      openFile: function (file) {
+        return docxToBlocks(file).then(function (blocks) {
+          render(blocks);
+          container.scrollTop = 0;
+          window.scrollTo(0, 0);
+          return file.name;
+        });
+      }
     };
+  }
+
+  /* ---------- Eigen .docx inlezen ---------- */
+
+  function loadMammoth() {
+    if (window.mammoth) return Promise.resolve(window.mammoth);
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "vendor/mammoth.browser.min.js";
+      s.onload = function () { resolve(window.mammoth); };
+      s.onerror = function () { reject(new Error("De Word-lezer kon niet worden geladen. Probeer de pagina opnieuw te openen.")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function docxToBlocks(file) {
+    if (!/\.docx$/i.test(file.name)) {
+      return Promise.reject(new Error("Alleen .docx-bestanden worden ondersteund. Sla een .doc-bestand in Word eerst op als .docx."));
+    }
+    return Promise.all([loadMammoth(), file.arrayBuffer()])
+      .then(function (r) { return r[0].convertToHtml({ arrayBuffer: r[1] }); })
+      .then(function (result) {
+        var blocks = htmlToBlocks(result.value);
+        if (!blocks.length) throw new Error("Er is geen tekst gevonden in " + file.name + ".");
+        return blocks;
+      }, function (e) {
+        if (e && /Word-lezer/.test(e.message)) throw e;
+        throw new Error(file.name + " kon niet worden gelezen. Is het een geldig Word-document?");
+      });
+  }
+
+  // Zet de HTML van mammoth om naar dezelfde blokken als het voorbeeldcontract.
+  function htmlToBlocks(html) {
+    var root = new DOMParser().parseFromString("<div>" + html + "</div>", "text/html").body.firstChild;
+    var blocks = [];
+
+    function text(el) {
+      return el.textContent.replace(/\s+/g, " ").trim();
+    }
+
+    function cellText(cell) {
+      var parts = Array.from(cell.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6")).map(text).filter(Boolean);
+      return parts.length ? parts.join("\n") : text(cell);
+    }
+
+    function walk(parent) {
+      Array.from(parent.children).forEach(function (el) {
+        var tag = el.tagName;
+        if (tag === "TABLE") {
+          blocks.push({
+            type: "table",
+            rows: Array.from(el.rows).map(function (row) { return Array.from(row.cells).map(cellText); })
+          });
+        } else if (/^H[1-6]$/.test(tag)) {
+          if (text(el)) blocks.push({ type: "h", text: text(el) });
+        } else if (tag === "P") {
+          if (text(el)) blocks.push({ type: "p", text: text(el) });
+        } else if (tag === "LI") {
+          var own = Array.from(el.childNodes)
+            .filter(function (n) { return !(n.nodeType === 1 && /^(UL|OL)$/.test(n.tagName)); })
+            .map(function (n) { return n.textContent; })
+            .join("").replace(/\s+/g, " ").trim();
+          if (own) blocks.push({ type: "p", text: own });
+          walk(el);
+        } else {
+          walk(el);
+        }
+      });
+    }
+
+    walk(root);
+    return blocks;
   }
 
   window.createDemoHost = createDemoHost;
