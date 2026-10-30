@@ -82,6 +82,9 @@ test("herkent meervouden, bezittelijke vormen en geen woorddelen", () => {
   assert.equal(D.findTermAt("the Seller’s obligations", 6, index), "Seller");
   assert.equal(D.findTermAt("the Sellers", 6, index), "Seller");
   assert.equal(D.findTermAt("Resellers", 4, index), null);
+  assert.equal(D.findTermAt("Seller", 0, index), "Seller");
+  const pair = "Seller/Shares";
+  assert.equal(D.findTermAt(pair, pair.indexOf("Shares") + 1, index), "Shares");
   assert.equal(D.findTermAt("the seller", 6, index), null);
 });
 

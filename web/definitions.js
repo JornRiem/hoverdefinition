@@ -208,8 +208,10 @@
     });
 
     var forms = Array.from(lookup.keys()).sort(function (a, b) { return b.length - a.length; });
+    // Groep 1 is het teken vóór de term (of het begin van de tekst), zodat
+    // alleen hele woorden matchen zonder lookbehind; die kent Safari < 16.4 niet.
     var regex = forms.length
-      ? new RegExp("(?<![\\p{L}\\p{N}])(?:" + forms.map(escapeRegExp).join("|") + ")(?![\\p{L}\\p{N}])", "gu")
+      ? new RegExp("(^|[^\\p{L}\\p{N}])(" + forms.map(escapeRegExp).join("|") + ")(?![\\p{L}\\p{N}])", "gu")
       : null;
 
     return { byTerm: byTerm, lookup: lookup, regex: regex };
@@ -221,7 +223,8 @@
     index.regex.lastIndex = 0;
     var m;
     while ((m = index.regex.exec(text))) {
-      out.push({ start: m.index, end: m.index + m[0].length, form: m[0], term: index.lookup.get(m[0]) });
+      var start = m.index + m[1].length;
+      out.push({ start: start, end: start + m[2].length, form: m[2], term: index.lookup.get(m[2]) });
     }
     return out;
   }
