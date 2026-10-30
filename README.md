@@ -22,6 +22,8 @@ Klik in een contract op een gedefinieerde term (bijvoorbeeld *Completion Date*).
 
 Open `web/taskpane.html` in een browser (of draai `npm start` en ga naar http://localhost:8080/taskpane.html). Buiten Word start de add-in in demo-modus met een voorbeeldcontract.
 
+Met **Open Word-document** (of door een `.docx` op de pagina te slepen) test je een eigen contract. Het document wordt alleen in de browser gelezen, met de meegeleverde bibliotheek mammoth.js (`web/vendor/`). Er wordt niets verstuurd. De omzetting van Word naar webpagina kan op details afwijken van Word zelf, maar is goed genoeg om de herkenning van definities te testen.
+
 ## Installatie op kantoor (voor IT)
 
 De add-in is bedoeld om op een **eigen interne webserver** te draaien. Er is geen database en geen server-side code nodig: het zijn alleen statische bestanden (HTML, JavaScript, CSS en afbeeldingen).
