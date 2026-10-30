@@ -5,6 +5,7 @@ var state = {
   host: null,
   index: Definitions.buildIndex([]),
   stack: [],
+  expanded: new Set(),
   savedPlace: null,
   ignoreSelectionUntil: 0,
   lastScan: 0
@@ -157,6 +158,78 @@ function showTerm(term, mode) {
     var at = state.stack.indexOf(term);
     state.stack = at >= 0 ? state.stack.slice(0, at + 1) : state.stack.concat(term);
   }
+  state.expanded.clear();
+  renderDetail();
+}
+
+// Sleutels van alle uitvouwbare termen van de getoonde term.
+function allExpansionKeys(term) {
+  var keys = [];
+  state.index.byTerm.get(term).forEach(function (def, d) {
+    keys = keys.concat(Definitions.expansionKeys(def, state.index, [term], term + "#" + d));
+  });
+  return keys;
+}
+
+/*
+ * Toont een definitietekst met klikbare termen. Een klik vouwt de definitie
+ * van die term tussen [ ] in de tekst zelf uit, zodat de hele zin in één keer
+ * te lezen is.
+ */
+function renderText(parent, def, ancestors, key) {
+  Definitions.tokenize(def.text, state.index, Definitions.ownTerms(def)).forEach(function (part, i) {
+    if (!part.term) {
+      parent.appendChild(document.createTextNode(part.text));
+      return;
+    }
+    var k = key + "/" + i;
+    var cycle = ancestors.indexOf(part.term) !== -1;
+    var open = !cycle && state.expanded.has(k);
+
+    var link = document.createElement("button");
+    link.className = "term-link" + (open ? " open" : "") + (cycle ? " cycle" : "");
+    link.textContent = part.text;
+    link.setAttribute("aria-expanded", String(open));
+    link.title = cycle
+      ? "Kringverwijzing: " + part.term + " wordt hierboven al uitgelegd. Klik om los te openen."
+      : (open ? "Inklappen" : "Uitvouwen: " + part.term);
+    link.addEventListener("click", function () {
+      if (cycle) return showTerm(part.term, "push");
+      if (open) state.expanded.delete(k);
+      else state.expanded.add(k);
+      renderDetail();
+    });
+    parent.appendChild(link);
+    if (!open) return;
+
+    var box = document.createElement("span");
+    box.className = "expansion";
+    var start = document.createElement("span");
+    start.className = "bracket";
+    start.textContent = "[";
+    box.appendChild(start);
+    var jump = document.createElement("button");
+    jump.className = "open-term";
+    jump.textContent = "↗";
+    jump.title = "Open " + part.term + " als losse term";
+    jump.addEventListener("click", function () { showTerm(part.term, "push"); });
+    box.appendChild(jump);
+    renderText(box, state.index.byTerm.get(part.term)[0], ancestors.concat(part.term), k);
+    var end = document.createElement("span");
+    end.className = "bracket";
+    end.textContent = "]";
+    box.appendChild(end);
+    parent.appendChild(box);
+  });
+}
+
+function toggleExpandAll() {
+  var term = state.stack[state.stack.length - 1];
+  if (!term) return;
+  var keys = allExpansionKeys(term);
+  var allOpen = keys.every(function (k) { return state.expanded.has(k); });
+  state.expanded.clear();
+  if (!allOpen) keys.forEach(function (k) { state.expanded.add(k); });
   renderDetail();
 }
 
@@ -186,6 +259,7 @@ function renderDetail() {
         b.textContent = t;
         b.addEventListener("click", function () {
           state.stack = state.stack.slice(0, i + 1);
+          state.expanded.clear();
           renderDetail();
         });
         crumbs.appendChild(b);
@@ -195,27 +269,23 @@ function renderDetail() {
 
   $("term-title").textContent = term;
 
+  var keys = allExpansionKeys(term);
+  var expandAll = $("expand-all");
+  expandAll.hidden = !keys.length;
+  expandAll.textContent = keys.length && keys.every(function (k) { return state.expanded.has(k); })
+    ? "Alles inklappen"
+    : "Alles uitvouwen";
+
   var box = $("definitions");
   box.replaceChildren();
-  state.index.byTerm.get(term).forEach(function (def) {
+  state.index.byTerm.get(term).forEach(function (def, d) {
     var div = document.createElement("div");
     div.className = "definition";
     var label = document.createElement("span");
     label.className = "source";
     label.textContent = sourceLabel(def);
     div.appendChild(label);
-    Definitions.tokenize(def.text, state.index, term).forEach(function (part) {
-      if (!part.term) {
-        div.appendChild(document.createTextNode(part.text));
-        return;
-      }
-      var link = document.createElement("button");
-      link.className = "term-link";
-      link.textContent = part.text;
-      link.title = "Bekijk de definitie van " + part.term;
-      link.addEventListener("click", function () { showTerm(part.term, "push"); });
-      div.appendChild(link);
-    });
+    renderText(div, def, [term], term + "#" + d);
     box.appendChild(div);
   });
 }
@@ -278,6 +348,7 @@ function start(host) {
   host.onSelection(onSelection);
   $("refresh").addEventListener("click", function () { rescan(false); });
   $("goto").addEventListener("click", goToDefinition);
+  $("expand-all").addEventListener("click", toggleExpandAll);
   $("return").addEventListener("click", returnToText);
   $("search").addEventListener("input", renderList);
   $("search").addEventListener("keydown", function (e) {
