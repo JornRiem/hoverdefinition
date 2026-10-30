@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Manifest voor de Word-add-in "Definities".
-  BASIS-URL: alle adressen hieronder verwijzen naar https://jornriem.github.io/hoverdefinition/.
-  Als de add-in ergens anders wordt gehost (bijvoorbeeld op een server van kantoor),
-  vervang dan die basis-URL overal in dit bestand.
+  De adressen hieronder (https://jornriem.github.io/hoverdefinition/) zijn een standaardwaarde.
+  Pas ze niet met de hand aan: het build-script (scripts/build.js) maakt in dist/ een
+  manifest met het adres van de eigen server (zie README).
 -->
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

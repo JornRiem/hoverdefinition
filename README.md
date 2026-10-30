@@ -23,30 +23,49 @@ Open `web/taskpane.html` in een browser (of draai `npm start` en ga naar http://
 
 ## Installatie op kantoor (voor IT)
 
-De add-in bestaat uit:
+De add-in is bedoeld om op een **eigen interne webserver** te draaien. Er is geen database en geen server-side code nodig: het zijn alleen statische bestanden (HTML, JavaScript, CSS en afbeeldingen).
 
-1. **Webbestanden** (map `web/`): statische HTML/JS/CSS zonder server-side code. Ze moeten via **HTTPS** bereikbaar zijn.
-2. **Het manifest** (`manifest.xml`): dit bestand registreert de add-in in Word.
+### Eisen aan de server
 
-### Stap 1 – Webbestanden hosten
+- **HTTPS met een certificaat dat de werkplekken vertrouwen**, bijvoorbeeld een certificaat van de interne CA dat via groepsbeleid is uitgerold. Office weigert add-ins over HTTP of met een onvertrouwd certificaat.
+- **Bereikbaar vanaf de werkplekken**, ook voor thuiswerkers (via VPN of een andere route). Wie Word op het web gebruikt, moet de server vanuit de browser kunnen bereiken.
+- **Elke gewone webserver volstaat**: IIS, Apache, nginx of een SharePoint-/intranetomgeving die statische bestanden serveert. Er zijn geen bijzondere instellingen nodig.
+- **Internettoegang voor de werkplekken** tot `appsforoffice.microsoft.com`. Daar laadt het paneel de standaard Office-bibliotheek van Microsoft. Bij Microsoft 365 is die toegang er normaal al.
+- **Geen contracttekst naar de server.** De server levert alleen de programmacode. Het lezen en herkennen van definities gebeurt in Word op de werkplek zelf.
 
-Standaard verwijst het manifest naar GitHub Pages: `https://jornriem.github.io/hoverdefinition/`.
+### Stap 1 – Pakket maken
 
-- Zet in de GitHub-repository onder *Settings → Pages* de *Source* op **GitHub Actions**. Bij elke push naar `main` draait de workflow `.github/workflows/pages.yml`: die test de code en publiceert daarna de map `web/`.
-- GitHub Pages voor een **privé**-repository vereist een betaald GitHub-abonnement.
-- Host je de bestanden liever op een eigen (kantoor)server, Azure Static Web Apps of SharePoint-CDN? Kopieer dan de map `web/` en vervang in `manifest.xml` overal `https://jornriem.github.io/hoverdefinition/` door het nieuwe adres.
+Hiervoor is Node.js 18 of nieuwer nodig. Geef het adres op waar de add-in komt te staan:
 
-### Stap 2 – Uitrollen via Microsoft 365
+```
+npm run build -- https://intranet.kantoor.nl/addins/definities/
+```
+
+Dit maakt de map `dist/` met:
+
+- `dist/web/`: deze bestanden komen op de webserver;
+- `dist/manifest.xml`: het manifest, met alle adressen al ingevuld voor de eigen server.
+
+### Stap 2 – Webbestanden plaatsen
+
+Kopieer de inhoud van `dist/web/` naar de opgegeven locatie op de server. Open als controle `https://…/taskpane.html` in een browser: je hoort dan de demo met een voorbeeldcontract te zien.
+
+### Stap 3 – Uitrollen via Microsoft 365
 
 1. Ga in het **Microsoft 365-beheercentrum** naar *Settings → Integrated apps → Upload custom apps*.
-2. Kies *Office Add-in* en upload `manifest.xml`.
-3. Wijs de add-in toe aan de juiste gebruikers of groepen.
+2. Kies *Office Add-in* en upload `dist/manifest.xml`.
+3. Wijs de add-in toe aan de juiste gebruikers of groepen. Start bijvoorbeeld met een kleine testgroep.
 
 Na enige tijd (soms tot 24 uur) verschijnt in Word op het tabblad **Start** de knop **Definities**.
 
+### Updates
+
+- **Nieuwe versie van de webbestanden:** vervang de bestanden op de server. Gebruikers krijgen de nieuwe versie zodra ze het paneel opnieuw openen. Soms is het nodig Word eerst helemaal af te sluiten, omdat Office de bestanden in een cache bewaart.
+- **Wijziging in `manifest.xml`** (bijvoorbeeld een ander serveradres of een nieuwe knop): verhoog `<Version>` in het manifest, maak het pakket opnieuw en upload het manifest opnieuw in het beheercentrum.
+
 ### Zelf testen vóór uitrol
 
-- **Word op het web**: *Invoegen → Invoegtoepassingen → Mijn invoegtoepassingen → Mijn invoegtoepassing uploaden* en kies `manifest.xml`. Dit kan alleen als het beheerbeleid het toestaat.
+- **Word op het web**: *Invoegen → Invoegtoepassingen → Mijn invoegtoepassingen → Mijn invoegtoepassing uploaden* en kies `dist/manifest.xml`. Dit kan alleen als het beheerbeleid het toestaat.
 - **Word voor Windows**: via een gedeelde netwerkmap als *Vertrouwde catalogus voor invoegtoepassingen* (*Bestand → Opties → Vertrouwenscentrum*). Ook dit kan door IT-beleid geblokkeerd zijn.
 
 ### Systeemeisen
@@ -59,8 +78,8 @@ Microsoft 365 / Word 2019 of nieuwer (WordApi 1.3) op Windows, Mac of het web.
 web/definitions.js   herkenning van definities en termen (pure logica, getest)
 web/taskpane.js      paneel + koppeling met de Word-API
 web/demo.js          voorbeeldcontract voor demo-modus buiten Word
-manifest.xml         add-in-manifest
+manifest.xml         add-in-manifest (bron; npm run build vult het serveradres in)
+scripts/build.js     maakt het installatiepakket in dist/
 test/                tests (npm test, Node 18+)
 ```
 
-Een update van de webbestanden is direct actief bij alle gebruikers. Alleen bij een wijziging van `manifest.xml` (zoals een nieuwe knop of een nieuw adres) moet IT het manifest opnieuw uploaden. Verhoog dan ook `<Version>`.
