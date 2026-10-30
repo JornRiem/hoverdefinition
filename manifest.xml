@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manifest voor de Word-add-in "Definities".
+  BASIS-URL: alle adressen hieronder verwijzen naar https://jornriem.github.io/hoverdefinition/.
+  Als de add-in ergens anders wordt gehost (bijvoorbeeld op een server van kantoor),
+  vervang dan die basis-URL overal in dit bestand.
+-->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="TaskPaneApp">
+  <Id>c08a45ac-d9c9-411d-9e7e-b399ab4b69b5</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Jorn Riemersma</ProviderName>
+  <DefaultLocale>nl-NL</DefaultLocale>
+  <DisplayName DefaultValue="Definities"/>
+  <Description DefaultValue="Toont direct de betekenis van gedefinieerde termen in een contract, inclusief doorklikken naar termen binnen een definitie."/>
+  <IconUrl DefaultValue="https://jornriem.github.io/hoverdefinition/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://jornriem.github.io/hoverdefinition/assets/icon-64.png"/>
+  <SupportUrl DefaultValue="https://github.com/JornRiem/hoverdefinition"/>
+  <AppDomains/>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.3">
+      <Set Name="WordApi" MinVersion="1.3"/>
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://jornriem.github.io/hoverdefinition/taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="Support.Url"/>
+          </GetStarted>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="Definities.Group">
+                <Label resid="Group.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16"/>
+                  <bt:Image size="32" resid="Icon.32"/>
+                  <bt:Image size="80" resid="Icon.80"/>
+                </Icon>
+                <Control xsi:type="Button" id="Definities.Open">
+                  <Label resid="Button.Label"/>
+                  <Supertip>
+                    <Title resid="Button.Label"/>
+                    <Description resid="Button.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16"/>
+                    <bt:Image size="32" resid="Icon.32"/>
+                    <bt:Image size="80" resid="Icon.80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>DefinitiesPane</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16" DefaultValue="https://jornriem.github.io/hoverdefinition/assets/icon-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="https://jornriem.github.io/hoverdefinition/assets/icon-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="https://jornriem.github.io/hoverdefinition/assets/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://jornriem.github.io/hoverdefinition/taskpane.html"/>
+        <bt:Url id="Support.Url" DefaultValue="https://github.com/JornRiem/hoverdefinition"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Group.Label" DefaultValue="Definities"/>
+        <bt:String id="Button.Label" DefaultValue="Definities"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Definities is geïnstalleerd"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Button.Tooltip" DefaultValue="Open het paneel met de betekenis van gedefinieerde termen."/>
+        <bt:String id="GetStarted.Description" DefaultValue="Klik op Start &gt; Definities en klik daarna in het document op een gedefinieerde term."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
