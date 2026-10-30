@@ -7,6 +7,7 @@
   --accent: #185abd;
   --accent-soft: #e8effa;
   --mark: #fff4ce;
+  --expand: rgba(24, 90, 189, 0.08);
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   font-size: 14px;
   color: var(--fg);
@@ -22,6 +23,7 @@
     --accent: #6ea8fe;
     --accent-soft: #233552;
     --mark: #4a4220;
+    --expand: rgba(110, 168, 254, 0.13);
   }
 }
 
@@ -94,10 +96,31 @@ body {
 #crumbs .sep { color: var(--muted); }
 #crumbs .current { color: var(--fg); font-weight: 600; }
 
-#term-title {
-  font-size: 18px;
+.title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin: 4px 0 8px;
 }
+
+#term-title {
+  font-size: 18px;
+  margin: 0;
+}
+
+.link-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.link-btn:hover { text-decoration: underline; }
 
 .definition {
   border-left: 3px solid var(--accent);
@@ -130,6 +153,44 @@ body {
 }
 
 .term-link:hover, .term-link:focus-visible { text-decoration-style: solid; }
+
+/* Uitgevouwen definitie in de tekst: [ … ] */
+.term-link.open {
+  background: none;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.term-link.cycle {
+  background: none;
+  color: var(--muted);
+}
+
+.expansion {
+  background: var(--expand);
+  border-radius: 3px;
+  padding: 2px 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.expansion .bracket {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.open-term {
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.open-term:hover, .open-term:focus-visible { opacity: 1; }
 
 .actions {
   display: flex;

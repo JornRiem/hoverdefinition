@@ -94,6 +94,35 @@ test("splitst een definitie in tekst en klikbare termen, zonder zichzelf", () =>
   assert.ok(def.text.includes("Business Days"));
 });
 
+test("vouwt definities recursief uit en stopt bij kringverwijzingen", () => {
+  const index = D.buildIndex(
+    D.extractDefinitions({
+      tables: [[
+        ["“Completion Date”", "five Business Days after the Condition is satisfied."],
+        ["“Business Day”", "a day on which banks are open."],
+        ["“Condition”", "approval of the Transaction."],
+        ["“Transaction”", "the transaction subject to the Condition."]
+      ]]
+    })
+  );
+  const def = index.byTerm.get("Completion Date")[0];
+  const keys = D.expansionKeys(def, index, ["Completion Date"], "root");
+  // Business Day, Condition, en daarbinnen Transaction; Condition binnen Transaction is een kring.
+  assert.deepEqual(keys, ["root/1", "root/3", "root/3/1"]);
+  assert.equal(D.expansionKeys(def, index, ["Completion Date"], "root", { depth: 1, total: 300 }).length, 2);
+});
+
+test("termen uit dezelfde inline alinea vouwen niet in elkaar uit", () => {
+  const index = D.buildIndex(
+    D.extractDefinitions({
+      paragraphs: [{ text: "Alpha (the “Seller”) and Beta (the “Purchaser”), each a “Party”.", index: 0 }]
+    })
+  );
+  const seller = index.byTerm.get("Seller")[0];
+  assert.deepEqual(D.tokenize(seller.text, index, D.ownTerms(seller)).filter((p) => p.term), []);
+  assert.deepEqual(D.expansionKeys(seller, index, ["Seller"], "root"), []);
+});
+
 test("gebruikt een geselecteerde term als de cursor niet op een term staat", () => {
   const index = sampleIndex();
   assert.equal(D.resolve("“Shares”", "", 0, index), "Shares");

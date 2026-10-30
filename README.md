@@ -9,7 +9,8 @@ Klik in een contract op een gedefinieerde term (bijvoorbeeld *Completion Date*).
   - definitiebepalingen, zoals `"Agreement" means …`, `"Encumbrance": …`, `"Koper" betekent …` en `Onder "Aandelen" wordt verstaan: …`;
   - definities in de lopende tekst, zoals `(the "Seller")`, `(hierna: "Koper")` en `each a "Party" and together the "Parties"`.
 - **Herkent termen in de tekst**, ook in het meervoud (*Business Days*) of de bezittelijke vorm (*Seller's*). Langere termen gaan voor kortere: *Completion Date* wordt niet als *Completion* gezien.
-- **Doorklikken**: termen binnen een definitie zijn klikbaar. Via het pad bovenin ga je terug.
+- **Uitvouwen in de tekst**: termen binnen een definitie zijn klikbaar. Een klik vouwt de betekenis van die term tussen [ ] op die plek in de tekst uit, zodat je de hele definitie in één keer leest. Nogmaals klikken klapt hem weer in. **Alles uitvouwen** vouwt in één keer de hele keten uit. Een kringverwijzing wordt niet opnieuw uitgevouwen.
+- **Losse term openen**: met ↗ in een uitgevouwen stuk open je die term als hoofdterm. Via het pad bovenin ga je terug.
 - **Ga naar definitie / Terug naar tekst**: springt naar de definitie in de schedule en daarna weer terug naar waar je was.
 - **Zoeken**: het zoekveld filtert de lijst met alle termen in het document.
 

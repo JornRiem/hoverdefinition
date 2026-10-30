@@ -149,6 +149,10 @@
         found.push({ term: term, text: text, source: { kind: "inline", paragraph: paragraphIndex } });
       }
     }
+    // De tekst is de hele alinea; daarin worden de andere termen van dezelfde
+    // alinea ook gedefinieerd, dus die verwijzen niet naar elkaar door.
+    var defined = found.map(function (d) { return d.term; });
+    found.forEach(function (d) { d.defines = defined; });
     return found;
   }
 
@@ -239,11 +243,13 @@
   }
 
   // Splitst een definitie in stukken tekst en (klikbare) termen.
+  // exclude: een term of een lijst termen die niet klikbaar moeten zijn.
   function tokenize(text, index, exclude) {
+    var skip = [].concat(exclude || []);
     var parts = [];
     var pos = 0;
     matches(text, index).forEach(function (m) {
-      if (m.term === exclude) return;
+      if (skip.indexOf(m.term) !== -1) return;
       if (m.start > pos) parts.push({ text: text.slice(pos, m.start) });
       parts.push({ text: m.form, term: m.term });
       pos = m.end;
@@ -252,8 +258,34 @@
     return parts;
   }
 
+  /*
+   * Sleutels van alle termen die in een definitie uitgevouwen kunnen worden,
+   * recursief. Een sleutel is het pad van stukken vanaf de hoofdterm
+   * ("Completion Date#0/1/3"). Een term die al hoger in de keten staat wordt
+   * niet opnieuw uitgevouwen (kringverwijzing).
+   */
+  function expansionKeys(def, index, ancestors, key, limits, out) {
+    limits = limits || { depth: 8, total: 300 };
+    out = out || [];
+    if (ancestors.length > limits.depth) return out;
+    tokenize(def.text, index, ownTerms(def)).forEach(function (part, i) {
+      if (!part.term || ancestors.indexOf(part.term) !== -1 || out.length >= limits.total) return;
+      var k = key + "/" + i;
+      out.push(k);
+      expansionKeys(index.byTerm.get(part.term)[0], index, ancestors.concat(part.term), k, limits, out);
+    });
+    return out;
+  }
+
+  // Termen die in de eigen definitietekst niet klikbaar zijn.
+  function ownTerms(def) {
+    return def.defines || [def.term];
+  }
+
   return {
     cleanTerm: cleanTerm,
+    expansionKeys: expansionKeys,
+    ownTerms: ownTerms,
     parseTable: parseTable,
     parseParagraph: parseParagraph,
     extractDefinitions: extractDefinitions,
